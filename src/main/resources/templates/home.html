@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{fragments/layout :: layout(pageTitle='홈페이지',
+      content=~{::main})}">
+
+
+<main class="container mt-5 apple-style-main">
+    <div class="content-wrapper">
+        <section class="hero-section">
+            <h1>일상의 전환,<br>가장 완벽한 시작.</h1>
+            <p>최고의 전문가들이 당신의 공간과 이사를 책임집니다.</p>
+            <a href="/users/login" class="cta-button">지금 바로 견적받기</a>
+        </section>
+        <section class="services-grid">
+            <div class="service-card cleaning-card">
+                <h2>프리미엄 클리닝</h2>
+                <p>보이지 않는 곳까지 완벽하게, 새로운 공간처럼 빛나게.</p>
+            </div>
+            <div class="service-card moving-card">
+                <h2>스마트 무빙</h2>
+                <p>안전은 기본, 스마트한 계획으로 가장 편안한 이사를 경험하세요.</p>
+            </div>
+        </section>
+    </div>
+</main>
+</html>

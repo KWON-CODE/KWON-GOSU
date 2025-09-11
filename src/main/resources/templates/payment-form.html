@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{fragments/layout :: layout(pageTitle='결제하기', content=~{::main})}">
+
+<main class="container mt-5">
+    <h2>결제하기</h2>
+    <h3>예약 번호: <span th:text="${booking.id}"></span></h3>
+    <div class="card my-4">
+        <div class="card-body">
+            <h5 class="card-title">결제 정보</h5>
+            <p class="card-text"><strong>고객님의 예약</strong> </p>
+            <p class="card-text"><strong>결제 예정 금액:</strong> <span th:text="${booking.quotedPrice}">50000</span> 원</p>
+        </div>
+    </div>
+    <button id="payment-button" class="btn btn-danger"
+            th:attr="data-booking-id=${booking.id},
+                     data-booking-name='고객님의 예약',
+                     data-amount=${booking.quotedPrice},
+                     data-buyer-name=${booking.users.username},
+                     data-buyer-email=${booking.users.email}">
+        [[${booking.quotedPrice}]]원 결제하기
+    </button>
+
+    <th:block th:fragment="scripts">
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <!-- 아임포트 라이브러리 -->
+        <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
+
+        <script th:inline="javascript">
+            // CSRF 토큰 설정 (Spring Security 사용 시)
+            const token = /*[[${_csrf.token}]]*/ null;
+            const header = /*[[${_csrf.headerName}]]*/ null;
+            if (token && header) {
+                $(document).ajaxSend(function(e, xhr, options) {
+                    xhr.setRequestHeader(header, token);
+                });
+            }
+
+            // 아임포트 객체 초기화
+            var IMP = window.IMP;
+            IMP.init("imp08732820");
+
+            // 결제 버튼 클릭 이벤트
+            $("#payment-button").click(function () {
+                const button = $(this);
+                const bookingId = button.data("booking-id");
+                const amount = button.data("amount");
+                const bookingName = button.data("booking-name");
+                const buyerName = button.data("buyer-name");
+                const buyerEmail = button.data("buyer-email");
+
+
+                if (!amount || amount <= 0) {
+                    alert("결제 금액이 올바르지 않습니다. 예약을 다시 생성해주세요.");
+                    return;
+                }
+
+                IMP.request_pay({
+                    pg:"html5_inicis",
+                    pay_method: "card",
+                    merchant_uid: bookingId,
+                    name: bookingName,
+                    amount: amount,
+                    buyer_email: buyerEmail,
+                    buyer_name: buyerName
+                }, function (rsp) {
+                    if (rsp.success) {
+                        // 백엔드에 검증 요청
+                        $.ajax({
+                            type: "POST",
+                            url: "/payments/verify",
+                            contentType: "application/json",
+                            data: JSON.stringify({
+                                imp_uid: rsp.imp_uid,
+                                merchant_uid: rsp.merchant_uid
+                            })
+                        }).done(function() {
+                            alert("결제가 성공적으로 완료되었습니다.");
+                            window.location.href = "/payments";
+                        }).fail(function(error) {
+                            alert("결제 검증에 실패했습니다: " + error.responseText);
+                        });
+                    } else {
+                        alert("결제에 실패했습니다. 에러: " + rsp.error_msg);
+                    }
+                });
+            });
+        </script>
+    </th:block>
+</main>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(pageTitle='회원가입', content=~{::main})}"
+>
+
+<main class="container mt-5">
+    <div class="form-card" style="max-width: 600px; margin: auto;">
+        <div class="form-header">
+            <h2>신규 사용자 등록</h2>
+        </div>
+        <div class="form-body">
+            <form th:action="@{/users/new}" th:object="${userDto}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <div class="mb-3">
+                    <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger" role="alert">
+                        <p th:each="err : ${#fields.globalErrors()}" th:text="${err}"></p>
+                    </div>
+                    <label for="username" class="form-label">닉네임</label>
+                    <input type="text" class="form-control" id="username" th:field="*{username}" placeholder="닉네임을 입력하세요">
+                    <!-- 오류 메시지 표시 부분 -->
+                    <div class="text-danger" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label">이메일 (로그인 ID)</label>
+                    <input type="email" class="form-control" id="email" th:field="*{email}" placeholder="example@email.com">
+                    <div class="text-danger" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">비밀번호</label>
+                    <input type="password" class="form-control" id="password" th:field="*{password}" placeholder="비밀번호를 입력하세요">
+                    <div class="text-danger" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+                </div>
+                <div class="mb-3">
+                    <label for="passwordConfirm" class="form-label">비밀번호 확인</label>
+                    <input type="password" class="form-control" id="passwordConfirm" th:field="*{passwordConfirm}" placeholder="비밀번호를 다시 한번 입력하세요">
+                    <div class="text-danger" th:if="${#fields.hasErrors('passwordConfirm')}" th:errors="*{passwordConfirm}"></div>
+                </div>
+
+
+                <div class="mb-3">
+                    <label for="phoneNumber" class="form-label">전화번호</label>
+                    <input type="text" class="form-control" id="phoneNumber" th:field="*{phoneNumber}" placeholder="'-' 없이 숫자만 입력하세요">
+
+                    <div class="text-danger" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></div>
+                </div>
+
+
+
+
+                <div class="mb-3">
+                    <label class="form-label">주소</label>
+                    <div class="input-group mb-2">
+                        <input type="text" id="zipcode" th:field="*{zipcode}" class="form-control" placeholder="우편번호" readonly>
+                        <button type="button" class="btn btn-secondary" onclick="execDaumPostcode()">주소 검색</button>
+                    </div>
+                    <input type="text" id="mainAddress" th:field="*{mainAddress}" class="form-control mb-2" placeholder="주소" readonly>
+                    <input type="text" id="detailAddress" th:field="*{detailAddress}" class="form-control" placeholder="상세주소 입력">
+                </div>
+
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">가입하기</button>
+                    <a href="/" class="btn btn-secondary">취소</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=7d0f7e6b43b1f448b83a91468adb582d"></script>
+    <script th:inline="javascript">
+        window.execDaumPostcode = function() {
+            new daum.Postcode({
+                oncomplete: function(data) {
+                    let addr = (data.userSelectedType === 'R') ? data.roadAddress : data.jibunAddress;
+                    document.getElementById('zipcode').value = data.zonecode;
+                    document.getElementById("mainAddress").value = addr;
+                    document.getElementById("detailAddress").focus();
+                }
+            }).open();
+        }
+
+
+        document.addEventListener("DOMContentLoaded", function() {
+
+            const passwordInput = document.getElementById('password');
+            const passwordConfirmInput = document.getElementById('passwordConfirm');
+            if (passwordInput && passwordConfirmInput) {
+                const messageDiv = document.createElement('div');
+                passwordConfirmInput.parentNode.appendChild(messageDiv);
+
+                function validatePassword() {
+                    const password = passwordInput.value;
+                    const passwordConfirm = passwordConfirmInput.value;
+                    if (passwordConfirm === '') {
+                        messageDiv.innerHTML = '';
+                        passwordConfirmInput.classList.remove('is-valid', 'is-invalid');
+                    } else if (password === passwordConfirm) {
+                        messageDiv.innerHTML = '<span class="text-success">비밀번호가 일치합니다.</span>';
+                        passwordConfirmInput.classList.remove('is-invalid');
+                        passwordConfirmInput.classList.add('is-valid');
+                    } else {
+                        messageDiv.innerHTML = '<span class="text-danger">비밀번호가 일치하지 않습니다.</span>';
+                        passwordConfirmInput.classList.remove('is-valid');
+                        passwordConfirmInput.classList.add('is-invalid');
+                    }
+                }
+                passwordInput.addEventListener('keyup', validatePassword);
+                passwordConfirmInput.addEventListener('keyup', validatePassword);
+            }
+
+            const usernameInput = document.getElementById('username');
+            if (usernameInput) {
+                const usernameMessageDiv = document.createElement('div');
+                // 닉네임 input 바로 다음에 메시지 div 삽입
+                usernameInput.parentNode.insertBefore(usernameMessageDiv, usernameInput.nextSibling);
+                let usernameDebounceTimer;
+
+                usernameInput.addEventListener('keyup', () => {
+                    clearTimeout(usernameDebounceTimer);
+                    usernameDebounceTimer = setTimeout(() => {
+                        const username = usernameInput.value;
+                        // 닉네임이 2글자 이상일 때만 검사 (불필요한 API 호출 방지)
+                        if (username.length > 1) {
+                            // 호출할 API 엔드포인트 주소 변경
+                            fetch(`/api/users/check-username?username=${encodeURIComponent(username)}`, {
+                                headers: { 'Accept': 'application/json' }
+                            })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.duplicated) {
+                                        usernameMessageDiv.innerHTML = '<span class="text-danger">이미 사용 중인 닉네임입니다.</span>';
+                                    } else {
+                                        usernameMessageDiv.innerHTML = '<span class="text-success">사용 가능한 닉네임입니다.</span>';
+                                    }
+                                });
+                        } else {
+                            usernameMessageDiv.innerHTML = '';
+                        }
+                    }, 500);
+                });
+            }
+
+
+            const emailInput = document.getElementById('email');
+            if (emailInput) {
+                const emailMessageDiv = document.createElement('div');
+                emailInput.parentNode.insertBefore(emailMessageDiv, emailInput.nextSibling);
+                let debounceTimer;
+
+                emailInput.addEventListener('keyup', () => {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        const email = emailInput.value;
+                        if (email.length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                            fetch(`/api/users/check-email?email=${encodeURIComponent(email)}`,
+                                {
+                                    headers: {
+                                        'Accept': 'application/json'
+                                    }
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.duplicated) {
+                                        emailMessageDiv.innerHTML = '<span class="text-danger">이미 사용 중인 이메일입니다.</span>';
+                                    } else {
+                                        emailMessageDiv.innerHTML = '<span class="text-success">사용 가능한 이메일입니다.</span>';
+                                    }
+                                });
+                        } else {
+                            emailMessageDiv.innerHTML = '';
+                        }
+                    }, 500);
+                });
+            }
+        });
+    </script>
+</main>
+
+</html>

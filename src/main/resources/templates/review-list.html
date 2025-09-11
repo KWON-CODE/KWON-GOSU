@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(pageTitle='전체 리뷰 목록',
+      content=~{::main})}">
+
+<main class="container mt-5">
+    <h2><i class="bi bi-star-fill"></i> 전체 리뷰 목록</h2>
+
+    <div th:if="${#lists.isEmpty(reviews)}" class="alert alert-info text-center mt-3">
+        등록된 리뷰가 없습니다.
+    </div>
+
+    <div class="list-group mt-3" th:unless="${#lists.isEmpty(reviews)}">
+        <div th:each="r : ${reviews}" class="list-group-item">
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">
+                    <span th:text="${r.provider.providerName}"></span> 업체에 대한 리뷰
+                </h5>
+
+                <small class="timeago" th:title="${#temporals.formatISO(r.createdAt)}"></small>
+            </div>
+            <p class="mb-1">
+                <span th:text="${'★'.repeat(r.rating)} + ${'☆'.repeat(5 - r.rating)}"></span>
+                (<span th:text="${r.rating}"></span>점)
+            </p>
+            <p class="mb-1" th:text="${r.comment}"></p>
+            <small class="text-muted">작성자: <span th:text="${r.users.username}"></span></small>
+        </div>
+    </div>
+</main>
+
+</html>

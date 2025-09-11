@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(pageTitle=${partner.username} + '님과의 대화', content=~{::main})}">
+
+<main class="container mt-5">
+    <div class="chat-container">
+        <div class="chat-header">
+            <h4 th:text="${partner.username}"></h4>
+            <a th:href="@{/messages}" class="btn btn-sm btn-outline-secondary">목록으로</a>
+        </div>
+
+        <div class="chat-history">
+            <div th:each="msg : ${chatHistory}" class="message-row"
+                 th:classappend="${msg.sender.email == #authentication.name} ? 'my-message' : 'their-message'">
+                <div class="message-bubble">
+                    <p class="mb-0" th:text="${msg.content}"></p>
+                    <small class="message-time" th:text="${#temporals.format(msg.sentAt, 'HH:mm')}"></small>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-form">
+            <form class="d-flex">
+
+                <textarea class="form-control" rows="2" id="content" placeholder="메시지를 입력하세요..."></textarea>
+                <button type="submit" class="btn btn-primary ms-2">전송</button>
+            </form>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+    <script th:inline="javascript">
+        const me = /*[[${me}]]*/ null;
+        const partner = /*[[${partner}]]*/ null;
+
+        const chatHistoryDiv = document.querySelector('.chat-history');
+        const messageForm = document.querySelector('.chat-form form');
+        const messageInput = document.getElementById('content');
+
+        let stompClient = null;
+        document.addEventListener('DOMContentLoaded', function() {
+            const socket = new SockJS('/ws');
+            stompClient = Stomp.over(socket);
+            stompClient.connect({}, onConnected, onError);
+            chatHistoryDiv.scrollTop = chatHistoryDiv.scrollHeight;
+        });
+
+        function onConnected() {
+            stompClient.subscribe('/topic/chat/' + me.id, onMessageReceived);
+        }
+
+        function onError(error) {
+            console.error('WebSocket 연결에 실패했습니다:', error);
+        }
+
+        messageForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const messageContent = messageInput.value.trim();
+            if (messageContent && stompClient) {
+                const chatMessage = {
+                    senderEmail: me.email,
+                    receiverId: partner.id,
+                    content: messageContent
+                };
+                stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
+                messageInput.value = '';
+            }
+        });
+
+        function onMessageReceived(payload) {
+            const message = JSON.parse(payload.body);
+
+            const messageRow = document.createElement('div');
+            messageRow.className = 'message-row';
+            messageRow.classList.add(message.sender.id === me.id ? 'my-message' : 'their-message');
+
+            const messageBubble = document.createElement('div');
+            messageBubble.className = 'message-bubble';
+
+            messageBubble.innerHTML = `<p class="mb-0">${message.content}</p><small class="message-time">${new Date(message.sentAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>`;
+
+            messageRow.appendChild(messageBubble);
+            chatHistoryDiv.appendChild(messageRow);
+            chatHistoryDiv.scrollTop = chatHistoryDiv.scrollHeight;
+        }
+    </script>
+</main>
+
+</html>

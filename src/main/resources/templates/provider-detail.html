@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(pageTitle=${provider.providerName},
+      content=~{::main})}">
+
+<main class="container mt-5">
+  <div class="row">
+    <div class="col-md-4 text-center">
+      <img th:if="${provider.profileImageName}" th:src="@{|/images/${provider.profileImageName}|}" class="img-fluid rounded-circle" style="width: 200px; height: 200px; object-fit: cover;">
+      <i th:if="${!provider.profileImageName}" class="bi bi-person-circle" style="font-size: 200px;"></i>
+      <h3 class="mt-3" th:text="${provider.providerName}"></h3>
+      <p><i class="bi bi-star-fill text-warning"></i> <span th:text="${provider.averageRating}"></span></p>
+    </div>
+    <div class="col-md-8">
+      <h4>업체 소개</h4>
+      <p th:text="${provider.description} ?: '등록된 소개가 없습니다.'"></p>
+      <hr>
+      <h4>제공 서비스 목록</h4>
+      <h5>이사 서비스</h5>
+      <ul><li th:each="s : ${provider.movingServices}" th:text="${s.movingType} + ' (' + ${s.capacity} + ')'"></li></ul>
+      <h5>에어컨 서비스</h5>
+      <ul><li th:each="s : ${provider.acServices}" th:text="${s.serviceType} + ' (' + ${s.productType} + ')'"></li></ul>
+      <hr>
+      <h4>고객 리뷰</h4>
+    </div>
+  </div>
+</main>
+
+</html>

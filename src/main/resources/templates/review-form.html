@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/header :: header-fragment(pageTitle='리뷰 작성',
+      content=~{::main})}">
+
+<main class="container mt-5">
+  <div class="card" style="max-width: 600px; margin: auto;">
+    <div class="card-header">
+      <h2><i class="bi bi-star-half"></i> 리뷰 작성</h2>
+    </div>
+    <div class="card-body">
+      <h5 class="card-title">예약 정보</h5>
+      <p class="card-text">
+        <strong>예약 번호:</strong> <span th:text="${booking.id}"></span><br>
+        <strong>서비스 제공자:</strong> <span th:text="${booking.provider.providerName}"></span>
+      </p>
+      <hr>
+      <form th:action="@{|/reviews/new/${booking.id}|}" th:object="${reviewDto}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+        <div class="mb-3">
+          <label for="rating" class="form-label">별점</label>
+          <select class="form-select" id="rating" th:field="*{rating}" required>
+            <option value="">-- 별점을 선택하세요 --</option>
+            <option value="5">★★★★★ (5점)</option>
+            <option value="4">★★★★☆ (4점)</option>
+            <option value="3">★★★☆☆ (3점)</option>
+            <option value="2">★★☆☆☆ (2점)</option>
+            <option value="1">★☆☆☆☆ (1점)</option>
+          </select>
+          <div class="text-danger" th:if="${#fields.hasErrors('rating')}" th:errors="*{rating}"></div>
+        </div>
+
+        <div class="mb-3">
+          <label for="comment" class="form-label">리뷰 내용</label>
+          <textarea class="form-control" id="comment" th:field="*{comment}" rows="5" placeholder="서비스 경험을 공유해주세요." required></textarea>
+          <div class="text-danger" th:if="${#fields.hasErrors('comment')}" th:errors="*{comment}"></div>
+        </div>
+
+        <div class="d-grid gap-2">
+          <button type="submit" class="btn btn-primary">리뷰 제출</button>
+          <a href="/bookings" class="btn btn-secondary">취소</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+
+</html>

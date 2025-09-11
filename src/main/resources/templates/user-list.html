@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(pageTitle='사용자 관리',
+       content=~{::main})}">
+
+
+<main class="container mt-5">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>사용자 목록</h2>
+    <a href="/users/new" class="btn btn-primary">
+      <i class="bi bi-person-plus-fill"></i> 신규 사용자 등록
+    </a>
+  </div>
+
+  <table class="table table-hover text-center">
+    <thead class="table-dark">
+    <tr>
+      <th>ID</th>
+      <th>닉네임</th>
+      <th>이메일</th>
+      <th>가입일</th>
+      <th>수정일</th>
+      <th>제공자 등록</th>
+      <th>관리</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="u : ${users}">
+      <td th:text="${u.id}"></td>
+      <td th:text="${u.username}"></td>
+      <td th:text="${u.email}"></td>
+      <td th:text="${#temporals.format(u.createdAt, 'yyyy-MM-dd')}"></td>
+
+      <td>
+
+        <span th:if="${u.updatedAt != null}"
+              th:text="${#temporals.format(u.updatedAt, 'yyyy-MM-dd')}"></span>
+
+        <span th:if="${u.updatedAt == null}">-</span>
+      </td>
+      <td>
+
+        <a th:if="${u.serviceProvider == null}" th:href="@{/providers/new/{id}(id=${u.id})}" class="btn btn-sm btn-success">등록하기</a>
+        <span th:if="${u.serviceProvider != null}" class="badge bg-secondary">등록 완료</span>
+
+
+        <a th:href="@{/users/edit/{id}(id=${u.id})}" class="btn btn-sm btn-outline-secondary">수정</a>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</main>
+
+</html>

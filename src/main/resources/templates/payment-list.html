@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(pageTitle='결제 내역',
+      content=~{::main})}">
+<head>
+    <th:block ></th:block>
+</head>
+<body>
+<nav th:replace="~{fragments/header :: nav-fragment}"></nav>
+<main class="container mt-5">
+    <h2>결제 내역</h2>
+    <table class="table">
+        <thead class="table-dark">
+        <tr>
+            <th>결제ID</th>
+            <th>예약ID</th>
+            <th>금액</th>
+            <th>결제수단</th>
+            <th>상태</th>
+            <th>결제일</th>
+        </tr>
+        </thead>
+        <tbody><tr th:each="p : ${payments}"><td th:text="${p.id}"></td><td th:text="${p.booking.id}"></td>
+            <td th:text="${p.amount}"></td><td th:text="${p.paymentMethod}"></td>
+            <td><span class="badge bg-success" th:text="${p.status}"></span></td>
+            <td th:text="${#temporals.format(p.paymentDate, 'yy-MM-dd HH:mm')}"></td></tr></tbody></table>
+</main><footer th:replace="~{fragments/footer :: footer-fragment}"></footer></body></html>

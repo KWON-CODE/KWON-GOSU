@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+
+<!-- 게시글 카드 목록 -->
+<th:block th:fragment="post-cards-fragment">
+    <div class="col wowPop" th:each="post, iterStat : ${paging.content}"
+         th:style="|animation-delay: ${0.1 + iterStat.index * 0.07}s|">
+
+
+            <div class="card h-100">
+                <th:block th:if="${post.thumbnailUrl != null}">
+                    <!-- 썸네일 URL이 있으면 해당 이미지를 표시 -->
+                    <img th:src="${post.thumbnailUrl}" class="card-img-top" alt="게시글 썸네일">
+                </th:block>
+
+                <div th:if="${post.status.name() == 'CLOSED'}"
+                     class="badge bg-dark text-white position-absolute"
+                     style="top: 10px; right: 10px; font-size: 0.9rem; z-index: 10;">
+                    예약 마감
+                </div>
+
+                <th:block th:unless="${post.thumbnailUrl != null}">
+                    <!-- 썸네일 URL이 NULL이면 기본 배경을 표시 -->
+                    <div class="card-img-top d-flex align-items-center justify-content-center"
+                         style="height: 200px; background-color: #f8f9fa;">
+                        <span class="text-muted">No Image</span>
+                    </div>
+                </th:block>
+
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title" th:text="${post.title}">게시글 제목</h5>
+                    <div class="card-price fw-bold text-primary my-2"
+                         th:if="${(post.category.name() == 'RECRUIT' or post.category.name() == 'SELL') and post.price > 0}">
+                        <span th:text="${#numbers.formatInteger(post.price, 3, 'COMMA')} + '원'">50,000원</span>
+                    </div>
+                    <div class="mt-auto">
+                        <span class="d-flex align-items-center small text-white-50">
+                            <i class="bi bi-person-fill me-2"></i>
+                            <span th:text="${post.users?.username}">작성자</span>
+                        </span>
+                    </div>
+                    <a th:href="@{|/posts/${post.id}|}" class="stretched-link"></a>
+                </div>
+                <div class="card-footer">
+                    <small class="d-flex align-items-center text-muted">
+                        <i class="bi bi-calendar3 me-2"></i>
+                        <span class="timeago"
+                              th:title="${#temporals.formatISO(post.createdAt)}"
+                              th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd')}">
+                        </span>
+                    </small>
+                </div>
+            </div>
+    </div>
+
+</th:block>
+
+<style>
+
+    .card-link {
+        text-decoration: none !important;
+        color: inherit !important;
+        box-shadow: none !important;
+        border-bottom: none !important;
+        outline: none !important;
+    }
+
+    .card-link:hover,
+    .card-link:active,
+    .card-link:focus,
+    .card-link:visited,
+    .card-link:focus-visible {
+        text-decoration: none !important;
+        color: inherit !important;
+        box-shadow: none !important;
+        border-bottom: none !important;
+        outline: none !important;
+        border: none !important;
+    }
+
+    .card-link .card-title {
+        text-decoration: none !important;
+        box-shadow: none !important;
+        border-bottom: none !important;
+    }
+
+    .card-img-top {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
+
+    .card-title {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+</style>
+
+</html>

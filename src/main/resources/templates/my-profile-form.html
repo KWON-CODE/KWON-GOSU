@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(pageTitle='사용자 정보 수정',
+       content=~{::main})}">
+
+<main class="apple-form-container">
+    <div class="card" style="max-width: 600px; margin: auto;">
+        <div class="card-header"><h2>내 정보 수정</h2></div>
+        <div class="card-body">
+            <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+            <form th:action="@{/my/profile}" th:object="${userDto}" method="post">
+                <div class="mb-3">
+                    <label class="form-label">이메일 (수정 불가)</label>
+                    <input type="email" class="form-control" th:field="*{email}" readonly>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">닉네임</label>
+                    <input type="text" class="form-control" th:field="*{username}" required>
+                    <div class="text-danger" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">전화번호</label>
+                    <input type="text" class="form-control" th:field="*{phoneNumber}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">주소</label>
+                    <div class="input-group mb-2">
+                        <input type="text" id="zipcode" th:field="*{zipcode}" class="form-control" placeholder="우편번호" readonly>
+                        <button type="button" class="btn btn-secondary" onclick="execDaumPostcode()">주소 검색</button>
+                    </div>
+                    <input type="text" id="mainAddress" th:field="*{mainAddress}" class="form-control mb-2" placeholder="주소" readonly>
+                    <input type="text" id="detailAddress" th:field="*{detailAddress}" class="form-control" placeholder="상세주소 입력">
+                </div>
+                <div class="d-grid"><button type="submit" class="btn btn-primary">수정 완료</button></div>
+            </form>
+        </div>
+    </div>
+    <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=7d0f7e6b43b1f448b83a91468adb582d"></script>
+
+    <script>
+        function execDaumPostcode() {
+            new daum.Postcode({
+                oncomplete: function(data) {
+                    let addr = (data.userSelectedType === 'R') ? data.roadAddress : data.jibunAddress;
+                    document.getElementById('zipcode').value = data.zonecode;
+                    document.getElementById("mainAddress").value = addr;
+                    document.getElementById("detailAddress").focus();
+                }
+            }).open();
+        }
+    </script>
+
+</main>
+</html>

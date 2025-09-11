@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(pageTitle='로그인',
+  content=~{::main})}"
+>
+
+<main class="container mt-5">
+  <div class="form-card" style="max-width: 500px;">
+    <div class="form-header text-center">
+      <h2>로그인</h2>
+    </div>
+    <div class="form-body">
+      <div th:if="${errorMessage}" class="alert alert-danger" role="alert" th:text="${errorMessage}">
+      </div>
+      <div th:if="${param.logout}" class="alert alert-info" role="alert">
+        성공적으로 로그아웃되었습니다.
+      </div>
+      <div th:if="${param.message == 'provider_registered'}" class="alert alert-success" role="alert">
+        서비스 제공자 가입이 완료되었습니다. 로그인해주세요.
+      </div>
+
+      <form th:action="@{/users/login}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+        <div class="mb-3">
+          <label for="username" class="form-label">이메일 (로그인 ID)</label>
+          <input type="email" name="username" class="form-control" id="username" required>
+        </div>
+        <div class="mb-3">
+          <label for="password" class="form-label">비밀번호</label>
+          <input type="password" name="password" class="form-control" id="password" required>
+        </div>
+        <div class="d-grid">
+          <button type="submit" class="btn btn-primary">로그인</button>
+        </div>
+      </form>
+      <div class="d-flex align-items-center my-3">
+        <hr class="flex-grow-1">
+        <span class="mx-2 text-muted">또는</span>
+        <hr class="flex-grow-1">
+      </div>
+
+      <div class="d-grid">
+        <a href="/oauth2/authorization/google" class="btn btn-danger d-flex justify-content-center align-items-center gap-2">
+          <i class="bi bi-google"></i>
+          <span>구글로 로그인</span>
+        </a>
+      </div>
+    </div>
+    <div class="form-footer">
+      <p class="footer-title">아직 계정이 없으신가요?</p>
+      <div class="footer-options">
+        <a th:href="@{/users/new}" class="footer-option-card">
+          <i class="bi bi-person"></i>
+          <div class="option-text">
+            <span class="option-title">일반 회원가입</span>
+            <span class="option-desc">서비스를 이용하고 싶습니다.</span>
+          </div>
+        </a>
+        <a th:href="@{/providers/new}" class="footer-option-card">
+          <i class="bi bi-briefcase"></i>
+          <div class="option-text">
+            <span class="option-title">서비스 제공자 가입</span>
+            <span class="option-desc">서비스를 제공하고 싶습니다.</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script th:if="${message}" th:inline="javascript">
+    /*<![CDATA[*/
+    alert([[${message}]]);
+    /*]]>*/
+  </script>
+
+</main>
+
+</html>

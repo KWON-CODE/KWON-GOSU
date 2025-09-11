@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(pageTitle='게시판',
+       content=~{::main},  scripts=~{::script})}"
+>
+
+<main class="container mt-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <h2 th:text="${boardTitle != null ? boardTitle : '전체 게시판'}" class="mb-3 mb-md-0">게시판</h2>
+
+        <div class="d-flex align-items-center gap-2">
+            <form th:action="@{/posts}" method="get" class="d-flex">
+                <input type="hidden" name="category" th:if="${category}" th:value="${category.name()}">
+                <input type="text" name="keyword" class="form-control"
+                       th:value="${keyword}" placeholder="검색..." style="width: 250px;">
+                <button type="submit" class="btn btn-outline-secondary ms-1 flex-shrink-0">
+                    <i class="bi bi-search"></i>
+                </button>
+            </form>
+
+            <a th:href="${category != null ? '/posts/new?category=' + category.name() : '/posts/new'}"
+               class="btn btn-primary flex-shrink-0"><i class="bi bi-pencil-square me-2"></i> 새 글 작성</a>
+        </div>
+    </div>
+
+
+    <div id="post-container" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+
+        <th:block th:if="${!paging.isEmpty()}" th:replace="~{fragments/post-cards :: post-cards-fragment}"></th:block>
+    </div>
+
+    <div th:if="${paging.isEmpty()}" class="text-center my-5">
+        <p class="lead text-muted">표시할 게시글이 없습니다.</p>
+    </div>
+
+    <div id="loading-spinner" class="text-center my-4" style="display: none;">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        let currentPage = /*[[${paging.number}]]*/ 0;
+        const totalPages = /*[[${paging.totalPages}]]*/ 0;
+        const keyword = /*[[${keyword}]]*/ '';
+        const category = /*[[${category?.name()}]]*/ null;
+
+        // 중복 요청을 방지하기 위한 플래그
+        let isLoading = false;
+
+        console.log("--- 페이지 로딩 완료 ---");
+        console.log("현재 페이지 (currentPage):", currentPage);
+        console.log("전체 페이지 (totalPages):", totalPages);
+        console.log("----------------------");
+
+        // 스크롤 이벤트 감지
+        window.addEventListener('scroll', () => {
+            // 마지막 페이지에 도달했거나, 현재 로딩 중이면 아무것도 하지 않음
+            if (currentPage >= totalPages - 1 || isLoading) {
+                return;
+            }
+
+            // 페이지 끝에 거의 도달했는지 확인 100px 트리거
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100) {
+                loadMorePosts();
+            }
+        });
+
+        function loadMorePosts() {
+            isLoading = true; // 로딩 시작
+            currentPage++;    // 다음 페이지로 설정
+
+            // 로딩 스피너를 화면에 표시
+            document.getElementById('loading-spinner').style.display = 'block';
+            const params = new URLSearchParams({
+                page: currentPage,
+                keyword: keyword || '',
+                category: category || ''
+            });
+
+            fetch(`/posts/more?${params.toString()}`)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('loading-spinner').style.display = 'none';
+
+                    if (html.trim().length > 0) {
+                        const postContainer = document.getElementById('post-container');
+                        postContainer.insertAdjacentHTML('beforeend', html);
+                    } else {
+                        currentPage = totalPages - 1;
+                    }
+                    isLoading = false; // 로딩 완료
+                })
+                .catch(error => {
+                    console.error('게시글을 더 불러오는 중 오류가 발생했습니다:', error);
+                    isLoading = false; // 에러 발생 시에도 로딩 상태 해제
+                    document.getElementById('loading-spinner').style.display = 'none';
+                });
+        }
+        /*]]>*/
+    </script>
+</main>
+
+
+</html>

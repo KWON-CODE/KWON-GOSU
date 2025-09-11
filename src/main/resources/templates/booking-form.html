@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(pageTitle='예약',
+      content=~{::content}, scripts=~{::scripts})}">
+
+<div th:fragment="content">
+<main class="container mt-5">
+    <div class="card" style="max-width: 600px; margin: auto;">
+        <div class="card-header">
+            <h2><i class="bi bi-calendar-plus-fill"></i> 신규 예약 등록</h2>
+        </div>
+        <div class="card-body">
+            <form th:action="@{/bookings/new}" th:object="${bookingDto}" method="post">
+                <div class="mb-3">
+                    <label class="form-label">서비스 제공자</label>
+                    <div th:if="${post != null}">
+                        <input type="text" class="form-control" th:value="${post.users.username}" readonly>
+                        <input type="hidden" th:field="*{providerId}">
+                    </div>
+                    <div th:unless="${post != null}">
+                        <input type="text" id="providerNameSearch" class="form-control" placeholder="제공자 닉네임으로 검색..." autocomplete="off" required>
+                        <div id="provider-suggestions" class="list-group mt-1"></div>
+                        <input type="hidden" th:field="*{providerId}" id="providerId">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="serviceCategory" class="form-label">서비스 종류</label>
+                    <select class="form-select" id="serviceCategory" th:field="*{serviceCategory}" required>
+                        <option th:each="sc : ${T(com.cleaning.platform.domain.ServiceCategory).values()}"
+                                th:value="${sc}" th:text="${sc.name()}"></option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="desiredDateTime" class="form-label">희망 일시</label>
+                    <input type="text" class="form-control" id="desiredDateTime"
+                           th:field="*{desiredDateTime}" required readonly>
+                </div>
+
+                <div class="mb-3">
+                    <label for="zipcode" class="form-label">우편번호</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="zipcode" th:field="*{zipcode}" placeholder="우편번호" readonly required>
+                        <button type="button" class="btn btn-outline-secondary" onclick="execDaumPostcode()">우편번호 찾기</button>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="mainAddress" class="form-label">기본 주소</label>
+                    <input type="text" class="form-control" id="mainAddress" th:field="*{mainAddress}" placeholder="기본 주소" readonly required>
+                </div>
+                <div class="mb-3">
+                    <label for="detailAddress" class="form-label">상세 주소</label>
+                    <input type="text" class="form-control" id="detailAddress" th:field="*{detailAddress}" placeholder="상세 주소">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">금액</label>
+                    <div th:if="${post != null}">
+                        <input type="text" class="form-control" th:value="${#numbers.formatInteger(post.price, 3, 'COMMA')} + '원'" readonly>
+                        <input type="hidden" th:field="*{quotedPrice}">
+                    </div>
+                    <div th:unless="${post != null}">
+                        <input type="number" class="form-control" id="quotedPrice" th:field="*{quotedPrice}" placeholder="금액을 입력하세요" required>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-success">예약 요청하기</button>
+                    <a href="/bookings" class="btn btn-secondary">예약 목록으로 돌아가기</a>
+                </div>
+            </form>
+            <div th:if="${post != null}" class="alert alert-info">
+                <h5 class="alert-heading" th:text="${post.title}">게시글 제목</h5>
+                <p class="mb-0">위 게시글에 대한 예약을 진행합니다.</p>
+            </div>
+            <input type="hidden" th:if="${post != null}" name="postId" th:value="*{postId}">
+        </div>
+    </div>
+
+
+    <th:block th:fragment="scripts">
+        <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            function execDaumPostcode() {
+                new daum.Postcode({
+                    oncomplete: function(data) {
+                        let addr = (data.userSelectedType === 'R') ? data.roadAddress : data.jibunAddress;
+                        document.getElementById('zipcode').value = data.zonecode;
+                        document.getElementById("mainAddress").value = addr;
+                        document.getElementById("detailAddress").focus();
+                    }
+                }).open();
+            }
+            document.addEventListener('DOMContentLoaded', function() {
+                flatpickr("#desiredDateTime", {
+                    enableTime: true,
+                    dateFormat: "Y-m-d H:i",
+                    minDate: "today",
+                    locale: "ko"
+                });
+
+                // 서비스 제공자 자동완성 초기화
+                const searchInput = document.getElementById('providerNameSearch');
+                const hiddenInput = document.getElementById('providerId');
+                const suggestionsContainer = document.getElementById('provider-suggestions');
+
+                const providersJson = /*[[${providersJson}]]*/ '[]';
+                const providers = JSON.parse(providersJson);
+
+                console.log('Loaded providers:', providers);
+
+                searchInput.addEventListener('keyup', function() {
+                    const searchTerm = searchInput.value.toLowerCase();
+                    suggestionsContainer.innerHTML = '';
+                    hiddenInput.value = '';
+
+                    if (searchTerm.length === 0) return;
+
+                    const matchedProviders = providers.filter(p =>
+                        p.providerName && p.providerName.toLowerCase().includes(searchTerm)
+                    );
+
+                    matchedProviders.forEach(provider => {
+                        const item = document.createElement('a');
+                        item.href = '#';
+                        item.className = 'list-group-item list-group-item-action';
+                        item.textContent = provider.providerName;
+
+                        item.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            searchInput.value = provider.providerName;
+                            hiddenInput.value = provider.id;
+                            suggestionsContainer.innerHTML = '';
+                        });
+                        suggestionsContainer.appendChild(item);
+                    });
+                });
+            });
+            /*]]>*/
+        </script>
+    </th:block>
+</main>
+</div>
+
+</html>

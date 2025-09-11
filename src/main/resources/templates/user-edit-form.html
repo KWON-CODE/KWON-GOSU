@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(pageTitle='사용자 정보 수정',
+       content=~{::main})}">
+
+<main class="container mt-5">
+    <div class="card" style="max-width: 600px; margin: auto;">
+        <div class="card-header">
+            <h2>사용자 정보 수정</h2>
+        </div>
+        <div class="card-body">
+            <form th:action="@{|/users/edit/${userId}|}" th:object="${userDto}" method="post">
+                <div class="mb-3">
+                    <label for="email" class="form-label">이메일 (수정 불가)</label>
+                    <input type="email" class="form-control" id="email" th:field="*{email}" readonly>
+                </div>
+                <div class="mb-3">
+                    <label for="username" class="form-label">닉네임</label>
+                    <input type="text" class="form-control" id="username" th:field="*{username}" required>
+                    <div class="text-danger" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
+                </div>
+                <div class="mb-3">
+                    <label for="phoneNumber" class="form-label">전화번호</label>
+                    <input type="text" class="form-control" id="phoneNumber" th:field="*{phoneNumber}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="address" class="form-label">주소</label>
+                    <input type="text" class="form-control" id="address" th:field="*{address}">
+                </div>
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">수정 완료</button>
+                    <a href="/users" class="btn btn-secondary">취소</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+</html>

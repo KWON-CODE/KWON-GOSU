@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(pageTitle='마이페이지',
+content=~{::main})}">
+
+
+
+
+<main class="container mt-5">
+    <h2>마이페이지</h2>
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile">내 정보</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" id="posts-tab" data-bs-toggle="tab" data-bs-target="#posts">내가 쓴 글</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" id="bookings-tab" data-bs-toggle="tab" data-bs-target="#bookings">내 예약</button></li>
+    </ul>
+    <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active p-3" id="profile">
+            <p><strong>닉네임:</strong> <span th:text="${user.username}"></span></p>
+            <p><strong>이메일:</strong> <span th:text="${user.email}"></span></p>
+            <a th:href="@{/my/profile}" class="btn btn-primary">정보 수정하기</a>
+        </div>
+        <div class="tab-pane fade p-3" id="posts">
+            <ul class="list-group"><li th:each="post : ${posts}" class="list-group-item" th:text="${post.title}"></li></ul>
+        </div>
+        <div class="tab-pane fade p-3" id="bookings">
+            <ul class="list-group"><li th:each="booking : ${bookings}" class="list-group-item" th:text="|${booking.id} - ${booking.provider.providerName} (${booking.status})|"></li></ul>
+        </div>
+    </div>
+</main>
+
+</html>

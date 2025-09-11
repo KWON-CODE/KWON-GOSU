@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(pageTitle='오류 발생',
+      content=~{::main})}">
+
+
+<main class="container mt-5 text-center">
+  <div class="alert alert-danger" role="alert">
+    <h4 class="alert-heading">죄송합니다, 오류가 발생했습니다.</h4>
+    <p th:text="${errorMessage}">여기에 상세 오류 메시지가 표시됩니다.</p>
+    <hr>
+    <p class="mb-0">
+      문제가 계속되면 관리자에게 문의해주세요. <br>
+      <a href="/" class="alert-link">홈으로 돌아가기</a>
+    </p>
+  </div>
+</main>
+
+</html>

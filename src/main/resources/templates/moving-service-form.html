@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(pageTitle='새 이사 서비스 등록',
+      content = ~{::main})}">
+
+<main class="container mt-5">
+    <div class="card" style="max-width: 600px; margin: auto;">
+        <div class="card-header">
+            <h2><i class="bi bi-truck"></i> 새 이사 서비스 등록</h2>
+        </div>
+        <div class="card-body">
+            <form th:action="@{|/provider/moving-services/new|}" th:object="${movingServiceDto}" method="post">
+                <div class="mb-3">
+                    <label for="movingType" class="form-label">이사 종류</label>
+                    <select class="form-select" id="movingType" th:field="*{movingType}" required>
+                        <option th:each="type : ${T(com.cleaning.platform.domain.MovingType).values()}"
+                                th:value="${type}" th:text="${type.name()}"></option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="capacity" class="form-label">수용량/평수</label>
+                    <input type="text" class="form-control" id="capacity" th:field="*{capacity}" placeholder="예: 5톤, 24평">
+                </div>
+                <div class="mb-3">
+                    <label for="basePrice" class="form-label">기본 가격</label>
+                    <input type="number" class="form-control" id="basePrice" th:field="*{basePrice}" placeholder="숫자만 입력">
+                </div>
+                <div class="mb-3">
+                    <label for="additionalInfo" class="form-label">추가 정보</label>
+                    <textarea class="form-control" id="additionalInfo" th:field="*{additionalInfo}" rows="4" placeholder="서비스에 대한 상세 설명을 입력하세요."></textarea>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">서비스 등록</button>
+                    <a th:href="@{|/provider/services|}" class="btn btn-secondary">취소</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+</html>

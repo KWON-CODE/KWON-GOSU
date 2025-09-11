@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(pageTitle=${post.title},
+      content=~{::main})}">
+
+<main class="container mt-5">
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between">
+            <h2 th:text="${post.title}"></h2>
+            <span>작성자: <span th:text="${post.users.username}"></span></span>
+            <span class="ms-3">조회: <span th:text="${post.viewCount}"></span></span>
+        </div>
+        <div class="card-body">
+            <div th:if="${not #lists.isEmpty(post.images)}" class="mb-4 border-bottom pb-4">
+                <div style="max-width: 600px; margin: auto;">
+                    <div id="postImageCarousel" class="carousel slide image-carousel-container" data-bs-ride="carousel">
+                        <div class="carousel-indicators">
+                            <button th:each="image, iterStat : ${post.images}"
+                                    type="button"
+                                    data-bs-target="#postImageCarousel"
+                                    th:data-bs-slide-to="${iterStat.index}"
+                                    th:classappend="${iterStat.first ? 'active' : ''}"
+                                    aria-current="true"
+                                    th:aria-label="'Slide ' + ${iterStat.count}">
+                            </button>
+                        </div>
+
+                        <div class="carousel-inner">
+                            <div th:each="image, iterStat : ${post.images}" class="carousel-item" th:classappend="${iterStat.first ? 'active' : ''}">
+                                <a href="#" class="js-image-modal-trigger" th:data-image-url="@{${image.imageUrl}}">
+                                    <img th:src="@{${image.imageUrl}}" class="img-fluid rounded" alt="첨부 이미지" style="max-height: 400px; width: auto; cursor: pointer;">
+                                </a>
+                            </div>
+                        </div>
+
+                    </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#postImageCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#postImageCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    </button>
+                </div>
+            </div>
+            <p style="white-space: pre-wrap;" th:text="${post.content}"></p>
+        </div>
+        <div class="card-footer p-4"
+             th:if="${(post.category.name() == 'RECRUIT' or post.category.name() == 'SELL') and post.price > 0}">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="fs-5">가격</span>
+                    <h3 class="fw-bold text-primary mb-0"
+                        th:text="${#numbers.formatInteger(post.price, 3, 'COMMA')} + '원'">50,000원</h3>
+                </div>
+
+                <div th:if="${post.status.name() == 'OPEN' and #authentication.name != post.users.email}">
+                    <a th:href="@{/bookings/new(postId=${post.id}, providerId=${post.users.id})}" class="btn btn-primary btn-lg">
+                        예약 및 결제 진행하기
+                    </a>
+                </div>
+
+                <div th:if="${post.status.name() == 'CLOSED'}">
+                    <span class="badge bg-secondary fs-6">예약 마감</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer text-muted d-flex justify-content-between">
+            <span class="timeago" th:title="${#temporals.formatISO(post.createdAt)}">
+                작성일: [[${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}]]
+            </span>
+            <div>
+                <div th:if="${#authentication.name != post.users.email}" class="d-inline">
+                    <a th:href="@{/messages/new(receiverId=${post.users.id})}" class="btn btn-sm btn-outline-success">1:1 메시지</a>
+                </div>
+                <div th:if="${#authentication.name == post.users.email}">
+                    <a href="#" class="btn btn-sm btn-outline-secondary">수정</a>
+                    <form th:action="@{/posts/{postId}/delete(postId=${post.id})}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('정말로 삭제하시겠습니까?');">삭제</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <hr>
+    <h3>댓글</h3>
+    <div class="list-group mb-4">
+        <div th:each="comment : ${post.comments}" class="list-group-item">
+            <strong><i class="bi bi-person-circle"></i> <span th:text="${comment.users.username}"></span></strong>
+            <small class="text-muted ms-2 timeago"
+                   th:title="${#temporals.formatISO(comment.createdAt)}">
+                [[${#temporals.format(comment.createdAt, 'yyyy-MM-dd HH:mm')}]]
+            </small>
+            <p class="mb-1" th:text="${comment.content}"></p>
+        </div>
+    </div>
+    <form th:action="@{/posts/{postId}/comments(postId=${post.id})}" th:object="${commentDto}" method="post" id="commentForm">
+        <div class="input-group">
+            <textarea class="form-control" rows="2" th:field="*{content}" placeholder="댓글을 입력하세요" id="commentContent"></textarea>
+            <button class="btn btn-outline-primary" type="submit">등록</button>
+        </div>
+    </form>
+    <div class="mt-3"><a href="/posts" class="btn btn-secondary">목록으로</a></div>
+    <script th:inline="javascript">
+        const commentForm = document.getElementById('commentForm');
+        if (commentForm) {
+            commentForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const postId = [[${post.id}]];
+                const commentContent = document.getElementById('commentContent').value;
+                const csrfInput = document.querySelector('input[name="_csrf"]');
+                const csrfToken = csrfInput ? csrfInput.value : null;
+                const headers = { 'Content-Type': 'application/json' };
+                if (csrfToken) { headers['X-CSRF-TOKEN'] = csrfToken; }
+
+                fetch(`/api/posts/${postId}/comments`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({ content: commentContent })
+                }).then(response => {
+                    if (response.ok) {
+                        alert('댓글이 등록되었습니다.');
+                        window.location.reload();
+                    } else {
+                        response.json().then(data => alert(data.message || '댓글 등록 실패'));
+                    }
+                });
+            });
+        }
+    </script>
+</main>
+
+<style>
+    .image-carousel-container {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .image-carousel-container .carousel-item {
+        text-align: center;
+    }
+
+    .image-carousel-container .carousel-control-prev,
+    .image-carousel-container .carousel-control-next {
+        width: 40px;
+        height: 40px;
+        top: 50%;
+        transform: translateY(-50%);
+        background-color: rgba(0, 0, 0, 0.3);
+        border-radius: 50%;
+    }
+
+    .image-carousel-container .carousel-control-prev {
+        left: -60px;
+    }
+
+    .image-carousel-container .carousel-control-next {
+        right: -60px;
+    }
+
+    .image-carousel-container .carousel-control-prev:hover,
+    .image-carousel-container .carousel-control-next:hover {
+        background-color: rgba(0, 0, 0, 0.6);
+    }
+
+    #postImageCarousel .carousel-indicators {
+        bottom: 15px !important;
+        margin-bottom: 0 !important;
+        justify-content: center !important;
+    }
+
+    #postImageCarousel .carousel-indicators button {
+        text-indent: 0 !important;
+        border: 0 !important;
+        padding: 0 !important;
+        margin: 0 4px !important;
+
+        width: 12px !important;
+        height: 12px !important;
+        border-radius: 50% !important;
+        background-color: rgba(255, 255, 255, 0.5) !important;
+
+        transition: all 0.3s ease !important;
+    }
+
+    #postImageCarousel .carousel-indicators button.active {
+        background-color: rgba(255, 255, 255, 1) !important;
+        transform: scale(1.2) !important;
+    }
+
+    #postImageCarousel .carousel-indicators button:hover {
+        background-color: rgba(255, 255, 255, 0.8) !important;
+        transform: scale(1.1) !important;
+    }
+
+    #postImageCarousel .carousel-indicators button {
+        width: 14px !important;
+        height: 14px !important;
+    }
+
+    #commentContent::-webkit-input-placeholder { /* Chrome, Safari, Opera */
+        color: #ffffff !important;
+        opacity: 1 !important;
+    }
+    #commentContent:-moz-placeholder { /* Firefox 18- */
+        color: #ffffff !important;
+        opacity: 1 !important;
+    }
+    #commentContent::-moz-placeholder { /* Firefox 19+ */
+        color: #ffffff !important;
+        opacity: 1 !important;
+    }
+    #commentContent:-ms-input-placeholder { /* IE 10+ */
+        color: #ffffff !important;
+        opacity: 1 !important;
+    }
+    #commentContent::-ms-input-placeholder { /* Edge */
+        color: #ffffff !important;
+        opacity: 1 !important;
+    }
+    #commentContent::placeholder { /* 표준 */
+        color: #ffffff !important;
+        opacity: 1 !important;
+    }
+
+    .list-group-item .timeago,
+    .card-footer .timeago {
+        color: #ffffff !important;
+    }
+</style>
+
+<div id="post-detail-scripts" th:fragment="scripts">
+</div>
+</html>

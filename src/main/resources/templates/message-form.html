@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(pageTitle='메시지'
+      ,content=~{::main})}">
+
+
+<main class="container mt-5">
+  <div class="card" style="max-width: 600px; margin: auto;">
+    <div class="card-header">
+      <h2><i class="bi bi-chat-dots-fill"></i> 새 메시지 작성</h2>
+    </div>
+    <div class="card-body">
+      <form th:action="@{/messages/new}" th:object="${messageDto}" method="post">
+        <input type="hidden" th:field="*{relatedBookingId}">
+
+        <div class="mb-3">
+          <label for="receiverId" class="form-label">받는 사람</label>
+          <input type="text" id="receiverName" class="form-control"
+                 placeholder="사용자 닉네임으로 검색..." autocomplete="off">
+          <div id="user-suggestions" class="list-group mt-1"></div>
+          <input type="hidden" th:field="*{receiverId}" id="receiverId">
+        </div>
+
+        <div class="mb-3">
+          <label for="content" class="form-label">메시지 내용</label>
+          <textarea class="form-control" id="content" rows="5" th:field="*{content}" placeholder="문의 내용을 입력하세요." required></textarea>
+        </div>
+
+        <div class="d-grid gap-2">
+          <button type="submit" class="btn btn-primary">보내기</button>
+          <a href="/messages" class="btn btn-secondary">취소</a>
+        </div>
+      </form>
+    </div>
+  </div>
+  <script th:inline="javascript">
+    /*<![CDATA[*/
+    const initialReceiverId = /*[[${initialReceiverId}]]*/ null;
+    const initialReceiverName = /*[[${initialReceiverName}]]*/ null;
+    /*]]>*/
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const searchInput = document.getElementById('receiverName');
+      const hiddenInput = document.getElementById('receiverId');
+      const suggestionsContainer = document.getElementById('user-suggestions');
+      const users = JSON.parse('[(${usersJson})]');
+      const form = document.querySelector('form');
+
+      if (initialReceiverId && initialReceiverName) {
+        searchInput.value = initialReceiverName; // 보이는 입력창에 이름 설정
+        hiddenInput.value = initialReceiverId;   // 숨겨진 입력창에 ID 설정
+        searchInput.readOnly = true;             // 사용자가 수정하지 못하도록 읽기 전용으로 설정
+        searchInput.style.backgroundColor = '#e9ecef'; // (선택) 읽기 전용 필드처럼 보이게 스타일 변경
+      }
+
+      form.addEventListener('submit', function(e) {
+        if (hiddenInput.value === '') {
+          e.preventDefault();
+          alert('받는 사람을 검색 후, 반드시 목록에서 클릭하여 선택해주세요.');
+        }
+      });
+
+      searchInput.addEventListener('keyup', function() {
+        if (searchInput.readOnly) {
+          return;
+        }
+
+        const searchTerm = searchInput.value.toLowerCase();
+        suggestionsContainer.innerHTML = '';
+        hiddenInput.value = '';
+
+        if (searchTerm.length === 0) {
+          return;
+        }
+
+        const matchedUsers = users.filter(user => user.username.toLowerCase().includes(searchTerm));
+
+        matchedUsers.forEach(user => {
+          const suggestionItem = document.createElement('a');
+          suggestionItem.href = '#';
+          suggestionItem.className = 'list-group-item list-group-item-action';
+          suggestionItem.textContent = user.username;
+
+          suggestionItem.addEventListener('click', function(e) {
+            e.preventDefault();
+            searchInput.value = user.username;
+            hiddenInput.value = user.id;
+            suggestionsContainer.innerHTML = '';
+          });
+
+          suggestionsContainer.appendChild(suggestionItem);
+        });
+      });
+    });
+  </script>
+</main>
+
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(pageTitle=${provider.providerName} + '님의 서비스 관리',
+      content=~{::main})}"
+>
+
+<main class="container mt-5">
+    <h2><span th:text="${provider.providerName}"></span> 님의 서비스 관리 대시보드</h2>
+    <hr>
+
+
+    <div class="mb-3">
+
+        <a th:if="${provider.providerType.name() == 'AC' or provider.providerType.name() == 'BOTH'}"
+           th:href="@{|/provider/ac-services/new|}" class="btn btn-primary">
+            <i class="bi bi-snow"></i> 새 에어컨 서비스 등록
+        </a>
+
+        <a th:if="${provider.providerType.name() == 'MOVING' or provider.providerType.name() == 'BOTH'}"
+           th:href="@{|/provider/moving-services/new|}" class="btn btn-info">
+            <i class="bi bi-truck"></i> 새 이사 서비스 등록
+        </a>
+    </div>
+
+    <div th:if="${provider.providerType.name() == 'AC' or provider.providerType.name() == 'BOTH'}" class="mt-4">
+        <h4><i class="bi bi-snow"></i> 등록된 에어컨 서비스</h4>
+        <table class="table table-hover">
+            <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>서비스 종류</th>
+                <th>제품 종류</th>
+                <th>가격 범위</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="s : ${provider.acServices}">
+                <td th:text="${s.id}"></td>
+                <td th:text="${s.serviceType}"></td>
+                <td th:text="${s.productType}"></td>
+                <td th:text="${s.priceRangeMin} + ' ~ ' + ${s.priceRangeMax}"></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(provider.acServices)}">
+                <td colspan="4" class="text-center">등록된 에어컨 서비스가 없습니다.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div th:if="${provider.providerType.name() == 'MOVING' or provider.providerType.name() == 'BOTH'}" class="mt-4">
+        <h4><i class="bi bi-truck"></i> 등록된 이사 서비스</h4>
+        <table class="table table-hover">
+            <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>이사 종류</th>
+                <th>수용량/평수</th>
+                <th>기본 가격</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="s : ${provider.movingServices}">
+                <td th:text="${s.id}"></td>
+                <td th:text="${s.movingType}"></td>
+                <td th:text="${s.capacity}"></td>
+                <td th:text="${s.basePrice}"></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(provider.movingServices)}">
+                <td colspan="4" class="text-center">등록된 이사 서비스가 없습니다.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+</html>
