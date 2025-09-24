@@ -1,5 +1,9 @@
 # 시연 GIF 용량을 줄여서 픽셀이 깨지네요.
 
+## 시연영상 다운링크
+https://github.com/KWON-CODE/Blog/blob/main/%EC%8B%9C%EC%97%B0%EC%98%81%EC%83%81/%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8/%EB%B0%9C%ED%91%9C%EC%98%81%EC%83%81.mp4
+
+
 https://kwon-gosu-production.up.railway.app/home
 
 
